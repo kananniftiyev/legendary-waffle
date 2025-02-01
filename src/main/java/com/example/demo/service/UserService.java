@@ -4,6 +4,8 @@ import com.example.demo.dtos.LoginUserDto;
 import com.example.demo.dtos.RegisterUserDto;
 import com.example.demo.model.User;
 import com.example.demo.repo.UserRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
@@ -21,13 +23,24 @@ public class UserService {
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
-    public User signup(RegisterUserDto input) {
-            User user = new User();
-            user.setUsername(input.getUsername());
-            user.setEmail(input.getEmail());
-            user.setPassword(passwordEncoder.encode(input.getPassword()));
+    public ResponseEntity<?> signup(RegisterUserDto input) {
+        if (userRepository.findByEmail(input.getEmail()).isPresent()) {
 
-        return userRepository.save(user);
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("Email already exists: " + input.getEmail());
+        }
+
+        User user = new User();
+        user.setUsername(input.getUsername());
+        user.setEmail(input.getEmail());
+        user.setPassword(passwordEncoder.encode(input.getPassword()));
+
+        User savedUser = userRepository.save(user);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(savedUser);
     }
 
     public User authenticate(LoginUserDto input) {

@@ -14,5 +14,4 @@ public class LoginResponse {
         return token;
     }
 
-    // Getters and setters...
 }
