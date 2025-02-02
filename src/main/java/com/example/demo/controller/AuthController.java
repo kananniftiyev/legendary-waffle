@@ -61,24 +61,24 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> logout(@AuthenticationPrincipal User user, HttpServletRequest request, HttpServletResponse response) {
         String jwt = getJwtFromCookies(request);
-
         if (jwt != null) {
 
             tokenBlacklistService.blacklistToken(jwt);
 
-            // Invalidate the JWT by deleting the cookie
             Cookie cookie = new Cookie("JWT", null);
             cookie.setHttpOnly(true);
             cookie.setSecure(true);
             cookie.setPath("/");
             cookie.setMaxAge(0);
             response.addCookie(cookie);
+            return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+
         }
 
-        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+        return ResponseEntity.ok(Map.of("message", "user not logged in."));
+
     }
 
 

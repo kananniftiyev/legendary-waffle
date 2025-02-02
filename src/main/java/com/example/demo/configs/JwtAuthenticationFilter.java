@@ -40,13 +40,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        return path.startsWith("/api/public/") || path.equals("/api/public/auth/login");
+    }
+
+
+    @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         try {
-
+            if (request.getServletPath().equals("/api/public/auth/login")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
             // Extract JWT from cookies
             final String jwt = getJwtFromCookies(request);
 

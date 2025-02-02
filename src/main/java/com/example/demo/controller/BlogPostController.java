@@ -55,7 +55,7 @@ public class BlogPostController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<BlogPost> getPost(@PathVariable Long id, @AuthenticationPrincipal User user) {
         BlogPost post = blogPostService.getPostById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
@@ -68,10 +68,10 @@ public class BlogPostController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<Object> updatePost(
             @PathVariable Long id,
-            @Valid @RequestBody BlogPost blogPost,
+            @Valid @RequestBody PostInDTO blogPost,
             @AuthenticationPrincipal User user) {
 
         BlogPost existingPost = blogPostService.getPostById(id)
@@ -81,9 +81,11 @@ public class BlogPostController {
             throw new AccessDeniedException("You don't have permission to update this post");
         }
 
-        blogPost.setId(id);
+        BlogPost newBlog = new BlogPost(
+                id, user.getId(), blogPost.getTitle(), blogPost.getContent(), LocalDateTime.now()
+        );
         blogPost.setUserId(user.getId());
-        BlogPost updatedPost = blogPostService.save(blogPost);
+        BlogPost updatedPost = blogPostService.save(newBlog);
 
         return ResponseEntity.ok(Map.of(
                 "message", "Post updated successfully",
@@ -92,7 +94,7 @@ public class BlogPostController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<Object> deletePost(@PathVariable Long id, @AuthenticationPrincipal User user) {
         BlogPost post = blogPostService.getPostById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
